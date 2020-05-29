@@ -3,13 +3,56 @@ const Discord = require('discord.js');
 const auth = require('./auth.json');
 const counter = require("./counter.js");
 const weather = require("./weather.js");
+const Stats = require('./stats').Stats
 
 const client = new Discord.Client();
 
+const statsMap = new Map()
 
 client.on('ready', () => {
-  console.log(`Logged in as ${client.user.tag}!`);
+    console.log(`Logged in as ${client.user.tag}!`);
+
+    client.guilds.cache.forEach(async (guild) => {
+        let expandingChannel  = guild.channels.cache.find((channel) => channel instanceof Discord.CategoryChannel && channel.name === "self-expanding")
+        if (!expandingChannel) {
+            expandingChannel = await guild.channels.create("self-expanding", {type: "category"})
+            guild.channels.create('Create channel', {type: "voice", parent: expandingChannel})
+        }
+
+        let statsChannel  = guild.channels.cache.find((channel) => channel instanceof Discord.CategoryChannel && channel.name === "Stats")
+        statsMap.set(guild.id, new Stats(guild, statsChannel))
+    })
 });
+
+client.on("guildMemberAdd", member => {
+    statsMap.get(member.guild.id).updateStats()
+})
+
+client.on("guildMemberRemove", member => {
+    statsMap.get(member.guild.id).updateStats()
+})
+
+client.on("channelCreate", channel => {
+    if (channel instanceof Discord.GuildChannel) {
+        setTimeout(() => {   
+        }, 500);
+        statsMap.get(channel.guild.id).updateStats()
+    }
+})
+
+client.on("channelDelete", channel => {
+    if (channel instanceof Discord.GuildChannel) {
+        statsMap.get(channel.guild.id).updateStats()
+    }
+})
+
+client.on("roleCreate", role => {
+    statsMap.get(role.guild.id).updateStats()
+})
+
+client.on("roleDelete", role => {
+    statsMap.get(role.guild.id).updateStats()
+})
 
 client.on("voiceStateUpdate", async (oldState, newState) => {
     if (newState.channel === undefined) 
