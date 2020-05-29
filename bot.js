@@ -19,9 +19,39 @@ client.on('ready', () => {
         }
 
         let statsChannel  = guild.channels.cache.find((channel) => channel instanceof Discord.CategoryChannel && channel.name === "Stats")
-        statsMap[guild.id] = new Stats(guild, statsChannel)
+        statsMap.set(guild.id, new Stats(guild, statsChannel))
     })
 });
+
+client.on("guildMemberAdd", member => {
+    statsMap.get(member.guild.id).updateStats()
+})
+
+client.on("guildMemberRemove", member => {
+    statsMap.get(member.guild.id).updateStats()
+})
+
+client.on("channelCreate", channel => {
+    if (channel instanceof Discord.GuildChannel) {
+        setTimeout(() => {   
+        }, 500);
+        statsMap.get(channel.guild.id).updateStats()
+    }
+})
+
+client.on("channelDelete", channel => {
+    if (channel instanceof Discord.GuildChannel) {
+        statsMap.get(channel.guild.id).updateStats()
+    }
+})
+
+client.on("roleCreate", role => {
+    statsMap.get(role.guild.id).updateStats()
+})
+
+client.on("roleDelete", role => {
+    statsMap.get(role.guild.id).updateStats()
+})
 
 client.on("voiceStateUpdate", async (oldState, newState) => {
     if (newState.channel === undefined) 
