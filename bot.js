@@ -10,9 +10,14 @@ client.on('ready', () => {
 });
 
 client.on('message', msg => {
-  if (msg.content === 'ping') {
-    msg.reply('Pong!');
-  }
+    if (!msg.content.startsWith(auth.prefix) || msg.author.bot) return;
+
+	const args = msg.content.slice(auth.prefix.length).split(/ +/);
+	const command = args.shift().toLowerCase();
+
+    if (command === 'ping') {
+        msg.reply('Pong!');
+    }
 });
 
 
