@@ -4,6 +4,7 @@ const auth = require('./auth.json');
 const counter = require("./counter.js");
 const Stats = require('./stats').Stats
 const unirest = require('unirest');
+const fs = require('fs')
 
 const client = new Discord.Client();
 
@@ -11,6 +12,8 @@ const statsMap = new Map()
 
 client.on('ready', () => {
     console.log(`Logged in as ${client.user.tag}!`);
+
+    client.user.setActivity('Bob Ross video', {type: "WATCHING"})
 
     client.guilds.cache.forEach(async (guild) => {
         let expandingChannel  = guild.channels.cache.find((channel) => channel instanceof Discord.CategoryChannel && channel.name === "self-expanding")
@@ -34,8 +37,6 @@ client.on("guildMemberRemove", member => {
 
 client.on("channelCreate", channel => {
     if (channel instanceof Discord.GuildChannel) {
-        setTimeout(() => {   
-        }, 500);
         statsMap.get(channel.guild.id).updateStats()
     }
 })
@@ -103,6 +104,13 @@ client.on('message', msg => {
             });
             break;
         }
+        case "quote":
+            fs.readFile('./quotes.txt', (err, data) => {
+                const content = String(data).split('\n')
+
+                msg.reply(content[Math.floor(Math.random() * content.length)])
+            })
+            break;
         default:{
             msg.reply("invalid command!")
             break;
