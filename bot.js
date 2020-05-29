@@ -2,8 +2,8 @@
 const Discord = require('discord.js');
 const auth = require('./auth.json');
 const counter = require("./counter.js");
-const weather = require("./weather.js");
 const Stats = require('./stats').Stats
+const unirest = require('unirest');
 
 const client = new Discord.Client();
 
@@ -78,12 +78,29 @@ client.on('message', msg => {
 
     switch (command) {
         case "ping":{
-            msg.reply("pong!")
+            msg.reply("pong!");
             break;
         }
         case "counter":{
             let answer = counter.exec(args);
             msg.reply(answer);
+            break;
+        }
+        case "meme":{
+            let request = unirest.get('https://meme-api.herokuapp.com/gimme');
+            console.log("meme");
+            request.then((response) => {
+                let body = response.body;
+                let answer = new Discord.MessageEmbed()
+                    .setColor('#0099ff')
+                    .setTitle(body.title)
+                    .setURL(body.postLink)
+                    .setDescription(`subreddit : ${body.subreddit}`)
+                    .setImage(body.url);
+
+                console.log(answer);
+                msg.reply(answer);
+            });
             break;
         }
         default:{
