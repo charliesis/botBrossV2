@@ -2,8 +2,11 @@
 const Discord = require('discord.js');
 const auth = require('./auth.json');
 const counter = require("./counter.js");
+const Stats = require('./stats').Stats
 
 const client = new Discord.Client();
+
+const statsMap = new Map()
 
 client.on('ready', () => {
     console.log(`Logged in as ${client.user.tag}!`);
@@ -15,10 +18,8 @@ client.on('ready', () => {
             guild.channels.create('Create channel', {type: "voice", parent: expandingChannel})
         }
 
-        const statsChannel  = guild.channels.cache.find((channel) => channel instanceof Discord.CategoryChannel && channel.name === "Stats")
-        if (!statsChannel) {
-            guild.channels.create("Stats", {type: "category"})
-        }
+        let statsChannel  = guild.channels.cache.find((channel) => channel instanceof Discord.CategoryChannel && channel.name === "Stats")
+        statsMap[guild.id] = new Stats(guild, statsChannel)
     })
 });
 
