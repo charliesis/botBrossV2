@@ -1,6 +1,7 @@
 
 const Discord = require('discord.js');
 const auth = require('./auth.json');
+const counter = require("./counter.js");
 
 const client = new Discord.Client();
 
@@ -46,6 +47,11 @@ client.on('message', msg => {
     switch (command) {
         case "ping":
             msg.reply("pong!")
+            break;
+
+        case "counter":
+            let answ = counter.exec(args);
+            msg.reply(answ);
             break;
     
         default:
