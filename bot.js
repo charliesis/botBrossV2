@@ -9,6 +9,22 @@ client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}!`);
 });
 
+client.on("voiceStateUpdate", async (oldState, newState) => {
+    if (newState.channel === undefined) 
+        return;
+    if (newState.channel && newState.channel.parent.name === 'self-expanding' && newState.channel.name === 'Create channel') {
+        const numberOfChannels = newState.channel.parent.children.size
+        const channel = await newState.guild.channels.create(`Channel ${numberOfChannels}`, {type: "voice", parent: newState.channel.parent})
+        newState.setChannel(channel)
+    }
+
+    if (oldState.channel && oldState.channel.parent.name === 'self-expanding' && oldState.channel.name != 'Create channel') {
+        if (oldState.channel.members.size == 0) {
+            oldState.channel.delete()
+        }
+    }
+});
+
 client.on('message', msg => {
     if (!msg.content.startsWith(auth.prefix) || msg.author.bot) return;
 
