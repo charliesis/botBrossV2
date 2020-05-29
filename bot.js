@@ -4,6 +4,7 @@ const auth = require('./auth.json');
 const counter = require("./counter.js");
 const Stats = require('./stats').Stats
 const unirest = require('unirest');
+const fs = require('fs')
 
 const client = new Discord.Client();
 
@@ -105,6 +106,13 @@ client.on('message', msg => {
             });
             break;
         }
+        case "quote":
+            fs.readFile('./quotes.txt', (err, data) => {
+                const content = String(data).split('\n')
+
+                msg.reply(content[Math.floor(Math.random() * content.length)])
+            })
+            break;
         default:{
             msg.reply("invalid command!")
             break;
