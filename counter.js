@@ -73,11 +73,11 @@ function getAllCounters(args){
 }
 
 function getHelp(){
-    let answer = "counter start '?' : start counter '?' \n";
-    answer += "counter reset '?' : reset counter '?' to 0 \n";
-    answer += "counter delete '?' : delete counter '?' \n";
-    answer += "counter ++ '?' : increment counter '?' by 1 \n";
-    answer += "counter -- '?' : decrement counter '?' by 1 \n";
+    let answer = "counter start <name> : start counter <name> \n";
+    answer += "counter reset <name> : reset counter <name> to 0 \n";
+    answer += "counter delete <name> : delete counter <name> \n";
+    answer += "counter ++ <name> : increment counter <name> by 1 \n";
+    answer += "counter -- <name> : decrement counter <name> by 1 \n";
     answer += "counter all : show value of all counters \n";
     answer += "counter help : get help \n";
 

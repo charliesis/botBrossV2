@@ -2,6 +2,7 @@
 const Discord = require('discord.js');
 const auth = require('./auth.json');
 const counter = require("./counter.js");
+const weather = require("./weather.js");
 
 const client = new Discord.Client();
 
@@ -33,18 +34,19 @@ client.on('message', msg => {
 	const command = args.shift().toLowerCase();
 
     switch (command) {
-        case "ping":
+        case "ping":{
             msg.reply("pong!")
             break;
-
-        case "counter":
-            let answ = counter.exec(args);
-            msg.reply(answ);
+        }
+        case "counter":{
+            let answer = counter.exec(args);
+            msg.reply(answer);
             break;
-    
-        default:
+        }
+        default:{
             msg.reply("invalid command!")
             break;
+        }
     }
 });
 
