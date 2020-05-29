@@ -111,6 +111,20 @@ client.on('message', msg => {
                 msg.reply(content[Math.floor(Math.random() * content.length)])
             })
             break;
+        case "hello":{
+            let voiceChannel = msg.member.voice.channel;
+            if (!voiceChannel)  return msg.reply("Welcome back! Glad you could make it.")
+
+            voiceChannel.join()
+                .then(connection => {
+                    const dispatcher = connection.play('./intro.mp3');
+                    dispatcher.on("speaking", speaking => {
+                        if (speaking == 0) voiceChannel.leave();
+                    });
+                })
+                .catch("error : " + console.error);
+            break;
+        }
         default:{
             msg.reply("invalid command!")
             break;
