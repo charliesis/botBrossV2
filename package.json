@@ -1,0 +1,25 @@
+{
+  "name": "botbrossv2",
+  "version": "1.0.0",
+  "description": "Best discord bot",
+  "main": "bot.js",
+  "dependencies": {
+    "discord.js": "^12.2.0",
+    "fs": "^0.0.1-security",
+    "unirest": "^0.6.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/charliesis/botBrossV2.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/charliesis/botBrossV2/issues"
+  },
+  "homepage": "https://github.com/charliesis/botBrossV2#readme"
+}

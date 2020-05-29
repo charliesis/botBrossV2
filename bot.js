@@ -37,8 +37,6 @@ client.on("guildMemberRemove", member => {
 
 client.on("channelCreate", channel => {
     if (channel instanceof Discord.GuildChannel) {
-        setTimeout(() => {   
-        }, 500);
         statsMap.get(channel.guild.id).updateStats()
     }
 })
