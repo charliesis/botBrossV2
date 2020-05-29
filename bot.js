@@ -4,9 +4,21 @@ const auth = require('./auth.json');
 
 const client = new Discord.Client();
 
-
 client.on('ready', () => {
-  console.log(`Logged in as ${client.user.tag}!`);
+    console.log(`Logged in as ${client.user.tag}!`);
+
+    client.guilds.cache.forEach(async (guild) => {
+        let expandingChannel  = guild.channels.cache.find((channel) => channel instanceof Discord.CategoryChannel && channel.name === "self-expanding")
+        if (!expandingChannel) {
+            expandingChannel = await guild.channels.create("self-expanding", {type: "category"})
+            guild.channels.create('Create channel', {type: "voice", parent: expandingChannel})
+        }
+
+        const statsChannel  = guild.channels.cache.find((channel) => channel instanceof Discord.CategoryChannel && channel.name === "Stats")
+        if (!statsChannel) {
+            guild.channels.create("Stats", {type: "category"})
+        }
+    })
 });
 
 client.on("voiceStateUpdate", async (oldState, newState) => {
