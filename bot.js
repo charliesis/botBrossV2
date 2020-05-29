@@ -15,8 +15,14 @@ client.on('message', msg => {
 	const args = msg.content.slice(auth.prefix.length).split(/ +/);
 	const command = args.shift().toLowerCase();
 
-    if (command === 'ping') {
-        msg.reply('Pong!');
+    switch (command) {
+        case "ping":
+            msg.reply("pong!")
+            break;
+    
+        default:
+            msg.reply("invalid command!")
+            break;
     }
 });
 
