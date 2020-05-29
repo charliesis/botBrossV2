@@ -12,6 +12,8 @@ const statsMap = new Map()
 client.on('ready', () => {
     console.log(`Logged in as ${client.user.tag}!`);
 
+    client.user.setActivity('Bob Ross video', {type: "WATCHING"})
+
     client.guilds.cache.forEach(async (guild) => {
         let expandingChannel  = guild.channels.cache.find((channel) => channel instanceof Discord.CategoryChannel && channel.name === "self-expanding")
         if (!expandingChannel) {
