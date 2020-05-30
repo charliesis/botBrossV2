@@ -238,7 +238,22 @@ client.on('message', async msg => {
                 .catch("error : " + console.error);
             break;
         }
-        default: {
+        case "roll":{
+            if(args[0] == undefined) args[0] = 10;
+            msg.reply(Math.round(Math.random() * args[0]));
+            break;  
+        } 
+        case "flip":{
+            let flip = (Math.floor(Math.random() * 2) == 0) ? "heads" : " tails";
+            msg.reply(flip);
+            break;
+        }
+        case "help":{
+            let str = fs.readFileSync("./help.md", "utf8");
+            msg.channel.send(str);
+            break;
+        }
+        default:{
             msg.reply("invalid command!")
             break;
         }
