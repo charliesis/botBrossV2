@@ -1,7 +1,10 @@
 const Discord = require('discord.js');
 const soundbardMap = new Map([
     ['✅', './audio/If this is your first time with us....mp3'],
-    ['❤️', './audio/intro.mp3']
+    ['❤️', './audio/intro.mp3'],
+    ['🧱', './audio/build-a-wall.mp3'],
+    ['🧑', './audio/and-his-name-is-john-cena.mp3'],
+    ['🧻', './audio/epic.swf_1.mp3'],
   ])
 
 function playSound(msg, audioPath, member = msg.member){
