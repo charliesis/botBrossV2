@@ -125,10 +125,9 @@ client.on('message', async msg => {
                     queue.set(msg.guild.id, queueConstruct);
 
                     queueConstruct.songs.push(song);
-                    //let embedMessage = constructEmbeddedMsgFromVideo(msg.guild,video)
-                    console.log(embedMessage);
-                    msg.channel.send(`**${song.title}** is now playing!`);
-                    
+                    let embedMessage = constructEmbeddedMsgFromVideo(msg.guild,video)
+                    msg.channel.send(embedMessage);
+
                     try {
                         var connection = await voiceChannel.join();
                         queueConstruct.connection = connection;
@@ -141,7 +140,8 @@ client.on('message', async msg => {
                     }
                 } else {
                     serverQueue.songs.push(song);
-                    msg.channel.send(`**${song.title}** has been added to the queue!`);
+                    let embedMessage = constructEmbeddedMsgFromVideo(msg.guild,video)
+                    msg.channel.send(embedMessage);
                 }
                 return undefined;
             break;
@@ -266,18 +266,17 @@ function play(guild, song){
 
 function constructEmbeddedMsgFromVideo(guild, video){
     const serverQueue = queue.get(guild.id);
-    const posInQueue = serverQueue.songs.length;
+    const posInQueue = serverQueue.songs.length-1;
 
     const embededMessage = new Discord.MessageEmbed()
-	.setTitle(video.title)
-	.setDescription('Some description here')
-	.setThumbnail(video.thumbnails)
+    .setTitle(video.title)
+    .setDescription(video.shortURL )
+	.setThumbnail(video.thumbnails.default.url)
 	.addFields(
-		{ name: 'Song duration', value: video.duration  },
-		{ name: 'Channel', value: video.channel },
-        { name: 'Position in queue', value: posInQueue, },
-    )
-    .setImage('https://i.imgur.com/wSTFkRM.png');
+		{ name: 'Video duration', value: `${video.duration.minutes} : ${video.duration.seconds}` ,inline: true},
+		{ name: 'Channel', value: video.channel.title, inline: true },
+        { name: 'Position in queue', value: posInQueue, inline:true},
+    );
     
     return embededMessage;
 }
