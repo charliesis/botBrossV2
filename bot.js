@@ -120,28 +120,28 @@ client.on('message', async msg => {
                     connection: null,
                     songs: [],
                     volume: 5,
-                        playing: true
-                    };
-                    queue.set(msg.guild.id, queueConstruct);
+                    playing: true
+                };
+                queue.set(msg.guild.id, queueConstruct);
 
-                    queueConstruct.songs.push(song);
-                    msg.channel.send(`**${song.title}** is now playing!`);
+                queueConstruct.songs.push(song);
+                msg.channel.send(`**${song.title}** is now playing!`);
 
-                    try {
-                        var connection = await voiceChannel.join();
-                        queueConstruct.connection = connection;
-                        play(msg.guild, queueConstruct.songs[0]);
-                    } catch (error) {
-                        console.error(error);
-                        msg.channel.send('Cannot join voice channel');
-                        queue.delete(msg.guild.id);
-                        return undefined;
-                    }
-                } else {
-                    serverQueue.songs.push(song);
-                    msg.channel.send(`**${song.title}** has been added to the queue!`);
+                try {
+                    var connection = await voiceChannel.join();
+                    queueConstruct.connection = connection;
+                    play(msg.guild, queueConstruct.songs[0]);
+                } catch (error) {
+                    console.error(error);
+                    msg.channel.send('Cannot join voice channel');
+                    queue.delete(msg.guild.id);
+                    return undefined;
                 }
-                return undefined;
+            } else {
+                serverQueue.songs.push(song);
+                msg.channel.send(`**${song.title}** has been added to the queue!`);
+            }
+            return undefined;
             break;
         }
         case "skip":{
@@ -154,7 +154,7 @@ client.on('message', async msg => {
             msg.member.voiceChannel.leave();
             return undefined;
         }
-        case "list":{
+        case "queue":{
             const serverQueue = queue.get(msg.guild.id);
             if(serverQueue){
                 if(serverQueue.songs[1]){
