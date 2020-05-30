@@ -155,6 +155,7 @@ client.on('message', async msg => {
         }
         case "stop": {
             if (!msg.member.voice.channel) return msg.channel.send('You are not in a voice channel!');
+            serverQueue.playing = false;
             serverQueue.connection.dispatcher.end();
             msg.member.voice.channel.leave();
             return undefined;
