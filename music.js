@@ -1,8 +1,9 @@
 const auth = require('./auth.json');
-const YoutTube = require('simple-youtube-api');
-const youtube = new YoutTube(auth.GOOGLE_API);
+// const YoutTube = require('simple-youtube-api');
+// const youtube = new YoutTube(auth.GOOGLE_API);
 const ytdl = require('ytdl-core');
 const Discord = require('discord.js');
+const youtube = require('scrape-youtube').default;
 
 const queue = new Map();
 
@@ -31,21 +32,25 @@ async function playUserInput(msg, serverQueue, args, search) {
         return msg.channel.send('Specify song to play!')
     }
 
-    try {
-        var video = await youtube.getVideo(args[0]);
-    } catch (error) {
-        try {
-            var videos = await youtube.searchVideos(search, 1);
-            var video = await youtube.getVideoByID(videos[0].id);
-        } catch (error) {
-            console.error(error);
-            return msg.channel.send('Cannot find video');
-        }
-    }
+    // try {
+    //     var video = await youtube.getVideo(args[0]);
+    // } catch (error) {
+    //     try {
+    //         var videos = await youtube.searchVideos(search, 1);
+    //         var video = await youtube.getVideoByID(videos[0].id);
+    //     } catch (error) {
+    //         console.error(error);
+    //         return msg.channel.send('Cannot find video');
+    //     }
+    // }
+
+    const result = await youtube.search(search, {limit: 1, type: 'video'})
+    const video = result[0]
+
     const song = {
         id: video.id,
         title: video.title,
-        url: `https://www.youtube.com/watch?v=${video.id}`
+        url: video.link
     };
 
     if (serverQueue.playing) {
@@ -79,7 +84,7 @@ function play(guild, song) {
                 play(guild, serverQueue.songs[0]);
             })
             .on('error', error => console.error(error));
-        dispatcher.setVolumeLogarithmic(5 / 5);
+        dispatcher.setVolumeLogarithmic(1) 
     })
 
 }
@@ -90,11 +95,11 @@ function constructEmbeddedMsgFromVideo(guild, video) {
 
     const embededMessage = new Discord.MessageEmbed()
         .setTitle(video.title)
-        .setDescription(video.shortURL)
-        .setThumbnail(video.thumbnails.default.url)
+        .setDescription(video.link)
+        .setThumbnail(video.thumbnail)
         .addFields(
-            { name: 'Video duration', value: `${video.duration.minutes} : ${video.duration.seconds.toString().padStart(2, '0')}`, inline: true },
-            { name: 'Channel', value: video.channel.title, inline: true },
+            { name: 'Video duration', value: `${Math.floor(video.duration / 60)} : ${(video.duration % 60).toString().padStart(2, '0')}`, inline: true },
+            { name: 'Channel', value: video.channel.name, inline: true },
             { name: 'Position in queue', value: posInQueue, inline: true },
         );
 

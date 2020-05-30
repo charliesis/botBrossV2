@@ -7,6 +7,7 @@
     "@discordjs/opus": "^0.3.2",
     "discord.js": "^12.2.0",
     "fs": "^0.0.1-security",
+    "scrape-youtube": "^0.2.0",
     "simple-youtube-api": "^5.2.1",
     "unirest": "^0.6.0",
     "ytdl-core": "^2.1.5"
