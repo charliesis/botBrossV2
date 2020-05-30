@@ -16,17 +16,25 @@ const queue = new Map();
 client.on('ready', () => {
     console.log(`Logged in as ${client.user.tag}!`);
 
-    client.user.setActivity('Bob Ross video', {type: "WATCHING"})
+    client.user.setActivity('Bob Ross video', { type: "WATCHING" })
 
     client.guilds.cache.forEach(async (guild) => {
-        let expandingChannel  = guild.channels.cache.find((channel) => channel instanceof Discord.CategoryChannel && channel.name === "self-expanding")
+        let expandingChannel = guild.channels.cache.find((channel) => channel instanceof Discord.CategoryChannel && channel.name === "self-expanding")
         if (!expandingChannel) {
-            expandingChannel = await guild.channels.create("self-expanding", {type: "category"})
-            guild.channels.create('Create channel', {type: "voice", parent: expandingChannel})
+            expandingChannel = await guild.channels.create("self-expanding", { type: "category" })
+            guild.channels.create('Create channel', { type: "voice", parent: expandingChannel })
         }
 
-        let statsChannel  = guild.channels.cache.find((channel) => channel instanceof Discord.CategoryChannel && channel.name === "Stats")
+        let statsChannel = guild.channels.cache.find((channel) => channel instanceof Discord.CategoryChannel && channel.name === "Stats")
         statsMap.set(guild.id, new Stats(guild, statsChannel))
+        queue.set(guild.id, {
+            textChannel: null,
+            voiceChannel: null,
+            connection: null,
+            songs: [],
+            volume: 5,
+            playing: false
+        });
     })
 });
 
@@ -59,11 +67,11 @@ client.on("roleDelete", role => {
 })
 
 client.on("voiceStateUpdate", async (oldState, newState) => {
-    if (newState.channel === undefined) 
+    if (newState.channel === undefined)
         return;
     if (newState.channel && newState.channel.parent.name === 'self-expanding' && newState.channel.name === 'Create channel') {
         const numberOfChannels = newState.channel.parent.children.size
-        const channel = await newState.guild.channels.create(`Channel ${numberOfChannels}`, {type: "voice", parent: newState.channel.parent})
+        const channel = await newState.guild.channels.create(`Channel ${numberOfChannels}`, { type: "voice", parent: newState.channel.parent })
         newState.setChannel(channel)
     }
 
@@ -80,24 +88,36 @@ client.on('message', async msg => {
     const args = msg.content.slice(auth.prefix.length).split(/ +/);
     const search = args.slice(1).join(' ');
     const serverQueue = queue.get(msg.guild.id);
-
     const command = args.shift().toLowerCase();
 
     switch (command) {
-        case "play":{
-            
+        case "play": {
+
             const voiceChannel = msg.member.voice.channel;
-            if(!voiceChannel) return msg.channel.send('Not in a voice channel');
+            if (!voiceChannel) {
+                return msg.channel.send('Not in a voice channel');
+            }
+
             const permissions = voiceChannel.permissionsFor(msg.client.user);
-            if(!permissions.has('CONNECT')){
+            if (!permissions.has('CONNECT')) {
                 return msg.channel.send('Cannot connect to voice channel');
             }
-            if(!permissions.has('SPEAK')){
+            if (!permissions.has('SPEAK')) {
                 return msg.channel.send('I cannot speak in this voice channel');
             }
 
+            serverQueue.textChannel = msg.channel
+            serverQueue.voiceChannel = voiceChannel
+
+            if (!args[0] && serverQueue.songs.length > 0) {
+                play(msg.guild, serverQueue.songs[0])
+                return
+            } else if (!args[0]) {
+               return msg.channel.send('Specify song to play!') 
+            }
+
             try {
-                const video = await youtube.getVideo(args[1]);
+                var video = await youtube.getVideo(args[0]);
             } catch (error) {
                 try {
                     var videos = await youtube.searchVideos(search, 1);
@@ -113,56 +133,34 @@ client.on('message', async msg => {
                 url: `https://www.youtube.com/watch?v=${video.id}`
             };
 
-            if(!serverQueue) {
-                const queueConstruct = {
-                    textChannel: msg.channel,
-                    voiceChannel: voiceChannel,
-                    connection: null,
-                    songs: [],
-                    volume: 5,
-                    playing: true
-                };
-                queue.set(msg.guild.id, queueConstruct);
+            if (serverQueue.playing) {
+                serverQueue.songs.push(song)
+            } else {
+                serverQueue.songs.push(song);
+                play(msg.guild, serverQueue.songs[0])
+            }
+            
+            let embedMessage = constructEmbeddedMsgFromVideo(msg.guild, video)
+            msg.channel.send(embedMessage);
 
-                    queueConstruct.songs.push(song);
-                    let embedMessage = constructEmbeddedMsgFromVideo(msg.guild,video)
-                    msg.channel.send(embedMessage);
-
-                    try {
-                        var connection = await voiceChannel.join();
-                        queueConstruct.connection = connection;
-                        play(msg.guild, queueConstruct.songs[0]);
-                    } catch (error) {
-                        console.error(error);
-                        msg.channel.send('Cannot join voice channel');
-                        queue.delete(msg.guild.id);
-                        return undefined;
-                    }
-                } else {
-                    serverQueue.songs.push(song);
-                    let embedMessage = constructEmbeddedMsgFromVideo(msg.guild,video)
-                    msg.channel.send(embedMessage);
-                }
-            return undefined;
             break;
         }
-        case "skip":{
-            if(!serverQueue) return msg.channel.send('Nothing to skip');
+        case "skip": {
+            if (!serverQueue) return msg.channel.send('Nothing to skip');
             serverQueue.connection.dispatcher.end();
             return undefined;
         }
-        case "stop":{
-            if(!msg.member.voice.channel) return msg.channel.send('You are not in a voice channel!');
+        case "stop": {
+            if (!msg.member.voice.channel) return msg.channel.send('You are not in a voice channel!');
             msg.member.voice.channel.leave();
             return undefined;
         }
-        case "queue":{
+        case "queue": {
             const serverQueue = queue.get(msg.guild.id);
-            if(serverQueue){
-                if(serverQueue.songs[1]){
-                    console.log(serverQueue.songs.length);
+            if (serverQueue) {
+                if (serverQueue.songs[1]) {
                     var result = '**Queue list**```';
-                    for(var i = 1; i < serverQueue.songs.length; i++){
+                    for (var i = 1; i < serverQueue.songs.length; i++) {
                         result += i + '. ' + serverQueue.songs[i].title + '\n';
                     }
                     msg.channel.send(result + '```');
@@ -174,34 +172,37 @@ client.on('message', async msg => {
             }
             return undefined;
         }
-        case "pause":{
-            if(serverQueue && serverQueue.playing){
+        case "pause": {
+            if (serverQueue && serverQueue.playing) {
                 serverQueue.playing = false;
                 serverQueue.connection.dispatcher.pause();
                 return msg.channel.send('Music is paused!');
             }
             return msg.channel.send('No music playing!');
         }
-        case "resume":{
-            if(serverQueue && !serverQueue.playing){
+        case "resume": {
+            if (serverQueue && !serverQueue.playing) {
                 serverQueue.playing = true;
                 serverQueue.connection.dispatcher.resume();
                 return msg.channel.send('Music was resumed!');
             }
             return msg.channel.send('No music playing!');
         }
-        case "ping":{
+        case "clearqueue": 
+            serverQueue.songs = []
+            msg.reply("Queue cleared!")
+            break;
+        case "ping": {
             msg.reply("pong!");
             break;
         }
-        case "counter":{
+        case "counter": {
             let answer = counter.exec(args);
             msg.channel.send(answer);
             break;
         }
-        case "meme":{
+        case "meme": {
             let request = unirest.get('https://meme-api.herokuapp.com/gimme');
-            console.log("meme");
             request.then((response) => {
                 let body = response.body;
                 let answer = new Discord.MessageEmbed()
@@ -211,7 +212,6 @@ client.on('message', async msg => {
                     .setDescription(`subreddit : ${body.subreddit}`)
                     .setImage(body.url);
 
-                console.log(answer);
                 msg.reply(answer);
             });
             break;
@@ -223,9 +223,9 @@ client.on('message', async msg => {
                 msg.reply(content[Math.floor(Math.random() * content.length)])
             })
             break;
-        case "hello":{
+        case "hello": {
             let voiceChannel = msg.member.voice.channel;
-            if (!voiceChannel)  return msg.reply("Welcome back! Glad you could make it.")
+            if (!voiceChannel) return msg.reply("Welcome back! Glad you could make it.")
 
             voiceChannel.join()
                 .then(connection => {
@@ -233,51 +233,55 @@ client.on('message', async msg => {
                     dispatcher.on("speaking", speaking => {
                         if (!speaking) voiceChannel.leave();
                     });
+                    dispatcher.setVolumeLogarithmic(1.5);
                 })
                 .catch("error : " + console.error);
             break;
         }
-        default:{
+        default: {
             msg.reply("invalid command!")
             break;
         }
     }
 });
 
-function play(guild, song){
+function play(guild, song) {
     const serverQueue = queue.get(guild.id);
 
-    if(!song) {
+    if (!song) {
         serverQueue.voiceChannel.leave();
-        queue.delete(guild.id);
         return;
     }
-    const dispatcher = serverQueue.connection.play(ytdl(song.url))
-        .on('speaking', (speaking) =>{
-            if(!speaking){
-                console.log('Song ended!');
+
+    serverQueue.voiceChannel.join().then(connection => {
+        serverQueue.connection = connection;
+        serverQueue.playing = true
+        const dispatcher = serverQueue.connection.play(ytdl(song.url))
+            .on('finish', () => {
+                serverQueue.playing = false
                 serverQueue.songs.shift();
                 play(guild, serverQueue.songs[0]);
-            }
-        })
-        .on('error', error => console.error(error));
-    dispatcher.setVolumeLogarithmic(5 / 5);
+            })
+            .on('error', error => console.error(error));
+        dispatcher.setVolumeLogarithmic(5 / 5);
+    })
+
 }
 
-function constructEmbeddedMsgFromVideo(guild, video){
+function constructEmbeddedMsgFromVideo(guild, video) {
     const serverQueue = queue.get(guild.id);
-    const posInQueue = serverQueue.songs.length-1;
+    const posInQueue = serverQueue.songs.length - 1;
 
     const embededMessage = new Discord.MessageEmbed()
-    .setTitle(video.title)
-    .setDescription(video.shortURL )
-	.setThumbnail(video.thumbnails.default.url)
-	.addFields(
-		{ name: 'Video duration', value: `${video.duration.minutes} : ${video.duration.seconds}` ,inline: true},
-		{ name: 'Channel', value: video.channel.title, inline: true },
-        { name: 'Position in queue', value: posInQueue, inline:true},
-    );
-    
+        .setTitle(video.title)
+        .setDescription(video.shortURL)
+        .setThumbnail(video.thumbnails.default.url)
+        .addFields(
+            { name: 'Video duration', value: `${video.duration.minutes} : ${video.duration.seconds.toString().padStart(2, '0')}`, inline: true },
+            { name: 'Channel', value: video.channel.title, inline: true },
+            { name: 'Position in queue', value: posInQueue, inline: true },
+        );
+
     return embededMessage;
 }
 
