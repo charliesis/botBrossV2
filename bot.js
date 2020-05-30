@@ -80,6 +80,9 @@ client.on("voiceStateUpdate", async (oldState, newState) => {
             oldState.channel.delete()
         }
     }
+    try {
+
+    } catch {}
 });
 
 client.on('message', async msg => {
@@ -152,6 +155,7 @@ client.on('message', async msg => {
         }
         case "stop": {
             if (!msg.member.voice.channel) return msg.channel.send('You are not in a voice channel!');
+            serverQueue.connection.dispatcher.end();
             msg.member.voice.channel.leave();
             return undefined;
         }
