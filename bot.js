@@ -5,6 +5,7 @@ const Stats = require('./stats').Stats
 const unirest = require('unirest');
 const fs = require('fs')
 const music = require('./music')
+const audio = require('./audio')
 
 const client = new Discord.Client();
 const statsMap = new Map()
@@ -12,9 +13,12 @@ const statsMap = new Map()
 client.on('ready', () => {
     console.log(`Logged in as ${client.user.tag}!`);
 
+    
+
     client.user.setActivity('Bob Ross video', { type: "WATCHING" })
 
     client.guilds.cache.forEach(async (guild) => {
+        audio.createInitialSoundboardChannel(client,guild);
         let expandingChannel = guild.channels.cache.find((channel) => channel instanceof Discord.CategoryChannel && channel.name === "self-expanding")
         if (!expandingChannel) {
             expandingChannel = await guild.channels.create("self-expanding", { type: "category" })
@@ -81,6 +85,11 @@ client.on("voiceStateUpdate", async (oldState, newState) => {
     } catch { }
 });
 
+client.on('messageReactionAdd', (msgReaction, user) => {
+    if (user.bot) return;
+    member = msgReaction.message.guild.member(user);
+    audio.emojiReact(msgReaction,member);
+});
 
 client.on('message', async msg => {
     if (!msg.content.startsWith(auth.prefix) || msg.author.bot) return;
@@ -176,18 +185,7 @@ client.on('message', async msg => {
             })
             break;
         case "hello": {
-            let voiceChannel = msg.member.voice.channel;
-            if (!voiceChannel) return msg.reply("Welcome back! Glad you could make it.")
-
-            voiceChannel.join()
-                .then(connection => {
-                    const dispatcher = connection.play('./audio/intro.mp3');
-                    dispatcher.on("speaking", speaking => {
-                        if (!speaking) voiceChannel.leave();
-                    });
-                    dispatcher.setVolumeLogarithmic(1.5);
-                })
-                .catch("error : " + console.error);
+            audio.playSound(msg,"./audio/intro.mp3")
             break;
         }
         case "roll": {
