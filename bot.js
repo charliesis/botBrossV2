@@ -120,9 +120,9 @@ client.on('message', async msg => {
                     connection: null,
                     songs: [],
                     volume: 5,
-                        playing: true
-                    };
-                    queue.set(msg.guild.id, queueConstruct);
+                    playing: true
+                };
+                queue.set(msg.guild.id, queueConstruct);
 
                     queueConstruct.songs.push(song);
                     let embedMessage = constructEmbeddedMsgFromVideo(msg.guild,video)
@@ -143,7 +143,7 @@ client.on('message', async msg => {
                     let embedMessage = constructEmbeddedMsgFromVideo(msg.guild,video)
                     msg.channel.send(embedMessage);
                 }
-                return undefined;
+            return undefined;
             break;
         }
         case "skip":{
@@ -156,7 +156,7 @@ client.on('message', async msg => {
             msg.member.voice.channel.leave();
             return undefined;
         }
-        case "list":{
+        case "queue":{
             const serverQueue = queue.get(msg.guild.id);
             if(serverQueue){
                 if(serverQueue.songs[1]){
