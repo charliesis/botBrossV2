@@ -5,6 +5,12 @@ const soundbardMap = new Map([
     ['🧱', './audio/build-a-wall.mp3'],
     ['🧑', './audio/and-his-name-is-john-cena.mp3'],
     ['🧻', './audio/epic.swf_1.mp3'],
+    ['🐑', './audio/mountonz.mp3'],
+    ['❌', './audio/oh no no no.mp3'],
+    ['⛏️', './audio/creeper.mp3'],
+    ['📯', './audio/airhorn.mp3'],
+    ['🐉', './audio/over9000.mp3'],
+    ['👮', './audio/police.mp3'],
   ])
 
 function playSound(msg, audioPath, member = msg.member){
@@ -27,8 +33,9 @@ function emojiReact(msgReaction,member){
     let msg = msgReaction.message; 
     let emoji = msgReaction.emoji;
     
+    //console.log(emoji)
     let audio = soundbardMap.get(emoji.name);
-    playSound(msg, audio, member)
+    if(audio != undefined) playSound(msg, audio, member)
 
     // removerUserReaction(msg,member.UserID)
     msgReaction.remove(member);
