@@ -6,6 +6,7 @@ const unirest = require('unirest');
 const fs = require('fs')
 const music = require('./music')
 const audio = require('./audio')
+const stream = require('merge-stream')
 
 const client = new Discord.Client();
 const statsMap = new Map()
@@ -194,6 +195,20 @@ client.on('message', async msg => {
         case "help": {
             let str = fs.readFileSync("./help.md", "utf8");
             msg.channel.send(str);
+            break;
+        }
+        case "join": {
+            msg.member.voice.channel.join()
+                .then(connection => {
+                    const streams = []
+                    msg.member.voice.channel.members.forEach((member) => {
+                        streams.push(connection.receiver.createStream(member.user, { end: 'manual' }))
+                    })
+                    const merged = stream(streams)
+                    connection.play(merged, {type: "opus"})
+                });
+
+
             break;
         }
         default: {
