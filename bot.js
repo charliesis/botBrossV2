@@ -19,13 +19,13 @@ client.on('ready', () => {
 
     client.guilds.cache.forEach(async (guild) => {
         audio.createInitialSoundboardChannel(client,guild);
-        let expandingChannel = guild.channels.cache.find((channel) => channel instanceof Discord.CategoryChannel && channel.name === "self-expanding")
+        let expandingChannel = guild.channels.cache.find((channel) => channel instanceof Discord.CategoryChannel && channel.name.toLowerCase() === "self-expanding")
         if (!expandingChannel) {
             expandingChannel = await guild.channels.create("self-expanding", { type: "category" })
             guild.channels.create('Create channel', { type: "voice", parent: expandingChannel })
         }
 
-        let statsChannel = guild.channels.cache.find((channel) => channel instanceof Discord.CategoryChannel && channel.name === "Stats")
+        let statsChannel = guild.channels.cache.find((channel) => channel instanceof Discord.CategoryChannel && channel.name.toLowerCase() === "stats")
         statsMap.set(guild.id, new Stats(guild, statsChannel))
         music.queue.set(guild.id, {
             textChannel: null,

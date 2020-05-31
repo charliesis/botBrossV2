@@ -43,10 +43,10 @@ function emojiReact(msgReaction,member){
 }
 
 async function createInitialSoundboardChannel(client,guild){
-    let generalCat = guild.channels.cache.find((channel) => channel instanceof Discord.CategoryChannel && channel.name === "GENERAL")
-    let soundboardChannel = guild.channels.cache.find((channel) => channel instanceof Discord.TextChannel && channel.name === "soundboard")
+    let generalCat = guild.channels.cache.find((channel) => channel instanceof Discord.CategoryChannel && channel.name.toLowerCase() === "general")
+    let soundboardChannel = guild.channels.cache.find((channel) => channel instanceof Discord.TextChannel && channel.name.toLowerCase() === "soundboard")
     if(!soundboardChannel){
-        soundboardChannel = await guild.channels.create("Soundboard", {type: "text ", generalCat});
+        soundboardChannel = await guild.channels.create("Soundboard", {type: "text ", parent: generalCat});
     }
     else{
         soundboardChannel.bulkDelete(100);
