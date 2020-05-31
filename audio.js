@@ -1,4 +1,5 @@
 const Discord = require('discord.js');
+var soundboardMessage;
 const soundbardMap = new Map([
     ['✅', './audio/If this is your first time with us....mp3'],
     ['❤️', './audio/intro.mp3'],
@@ -33,6 +34,8 @@ function emojiReact(msgReaction,member){
     let msg = msgReaction.message; 
     let emoji = msgReaction.emoji;
     
+    if(!soundboardMessage || soundboardMessage.id != msg.id) return
+
     //console.log(emoji)
     let audio = soundbardMap.get(emoji.name);
     if(audio != undefined) playSound(msg, audio, member)
@@ -45,6 +48,10 @@ function emojiReact(msgReaction,member){
 async function createInitialSoundboardChannel(client,guild){
     let generalCat = guild.channels.cache.find((channel) => channel instanceof Discord.CategoryChannel && channel.name.toLowerCase() === "general")
     let soundboardChannel = guild.channels.cache.find((channel) => channel instanceof Discord.TextChannel && channel.name.toLowerCase() === "soundboard")
+
+    if(!generalCat){
+        soundboardChannel = await guild.channels.create("General", {type: "category ", parent: generalCat});
+    }
     if(!soundboardChannel){
         soundboardChannel = await guild.channels.create("Soundboard", {type: "text ", parent: generalCat});
     }
@@ -60,6 +67,7 @@ async function createInitialSoundboardChannel(client,guild){
 
 
     soundboardChannel.send(description).then(sentMsg => {
+        soundboardMessage = sentMsg;
         for (const [key, value] of soundbardMap) {
             sentMsg.react(key);
         }
