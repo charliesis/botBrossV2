@@ -31,20 +31,15 @@ async function playUserInput(msg, serverQueue, args, search) {
     } else if (!args[0]) {
         return msg.channel.send('Specify song to play!')
     }
+    if (args[0].includes('youtube.com')) {
+        msg.channel.send('Url links not supported!')
+        return
+    } 
+    else {
+        result = await youtube.search(search, {limit: 1, type: 'video'})
+    }
 
-    // try {
-    //     var video = await youtube.getVideo(args[0]);
-    // } catch (error) {
-    //     try {
-    //         var videos = await youtube.searchVideos(search, 1);
-    //         var video = await youtube.getVideoByID(videos[0].id);
-    //     } catch (error) {
-    //         console.error(error);
-    //         return msg.channel.send('Cannot find video');
-    //     }
-    // }
-
-    const result = await youtube.search(search, {limit: 1, type: 'video'})
+    console.log(result)
     const video = result[0]
 
     const song = {
