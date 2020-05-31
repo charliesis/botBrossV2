@@ -1,5 +1,5 @@
 const Discord = require('discord.js');
-var soundboardMessage;
+const soundboardMessage = new Map()
 const soundbardMap = new Map([
     ['✅', './audio/If this is your first time with us....mp3'],
     ['❤️', './audio/intro.mp3'],
@@ -20,7 +20,6 @@ function playSound(msg, audioPath, member = msg.member){
 
     voiceChannel.join()
         .then(connection => {
-            console.log(audioPath)
             const dispatcher = connection.play(audioPath);
             dispatcher.on("speaking", speaking => {
                 if (!speaking) voiceChannel.leave();
@@ -34,7 +33,9 @@ function emojiReact(msgReaction, user){
     let msg = msgReaction.message; 
     let emoji = msgReaction.emoji;
     
-    if(!soundboardMessage || soundboardMessage.id != msg.id) return
+    let soundMsgId = soundboardMessage.get(msgReaction.message.guild.id)
+
+    if(soundMsgId != msg.id) return
 
     const member = msgReaction.message.guild.member(user);
     let audio = soundbardMap.get(emoji.name);
@@ -65,21 +66,13 @@ async function createInitialSoundboardChannel(client,guild){
 
 
     soundboardChannel.send(description).then(sentMsg => {
-        soundboardMessage = sentMsg;
+        soundboardMessage.set(guild.id,sentMsg.id)
         for (const [key, value] of soundbardMap) {
             sentMsg.react(key);
         }
     })
 
     
-}
-
-function removerUserReaction(message,UserID){
-    console.log(message.reactions.cache)
-    message.reactions.cache.forEach(reaction => {
-        console.log(UserID)
-        reaction.remove(UserID)
-    });
 }
 
 
