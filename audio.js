@@ -45,9 +45,6 @@ function emojiReact(msgReaction,member){
 async function createInitialSoundboardChannel(client,guild){
     let generalCat = guild.channels.cache.find((channel) => channel instanceof Discord.CategoryChannel && channel.name === "GENERAL")
     let soundboardChannel = guild.channels.cache.find((channel) => channel instanceof Discord.TextChannel && channel.name === "soundboard")
-    if (!generalCat) {
-        generalCat = await guild.channels.create("General", {type: "category"})
-    }
     if(!soundboardChannel){
         soundboardChannel = await guild.channels.create("Soundboard", {type: "text ", generalCat});
     }
