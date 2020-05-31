@@ -87,8 +87,7 @@ client.on("voiceStateUpdate", async (oldState, newState) => {
 
 client.on('messageReactionAdd', (msgReaction, user) => {
     if (user.bot) return;
-    member = msgReaction.message.guild.member(user);
-    audio.emojiReact(msgReaction,member);
+    audio.emojiReact(msgReaction, user);
 });
 
 client.on('message', async msg => {

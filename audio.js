@@ -30,19 +30,17 @@ function playSound(msg, audioPath, member = msg.member){
         .catch("error : " + console.error);
 }
 
-function emojiReact(msgReaction,member){
+function emojiReact(msgReaction, user){
     let msg = msgReaction.message; 
     let emoji = msgReaction.emoji;
     
     if(!soundboardMessage || soundboardMessage.id != msg.id) return
 
-    //console.log(emoji)
+    const member = msgReaction.message.guild.member(user);
     let audio = soundbardMap.get(emoji.name);
     if(audio != undefined) playSound(msg, audio, member)
 
-    // removerUserReaction(msg,member.UserID)
-    msgReaction.remove(member);
-    msg.react(emoji.name);
+    msgReaction.users.remove(user)
 }
 
 async function createInitialSoundboardChannel(client,guild){
