@@ -5,6 +5,7 @@
   "main": "bot.js",
   "dependencies": {
     "@discordjs/opus": "^0.3.2",
+    "audio-mixer": "^2.1.4",
     "discord.js": "^12.2.0",
     "fs": "^0.0.1-security",
     "merge-stream": "^2.0.0",

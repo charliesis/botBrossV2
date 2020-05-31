@@ -6,10 +6,17 @@ const unirest = require('unirest');
 const fs = require('fs')
 const music = require('./music')
 const audio = require('./audio')
-const stream = require('merge-stream')
+const AudioMixer = require('audio-mixer');
 
 const client = new Discord.Client();
 const statsMap = new Map()
+
+const mixer = new AudioMixer.Mixer({
+    channels: 1,
+    bitDepth: 16,
+    sampleRate: 44100,
+    clearInterval: 10
+});
 
 client.on('ready', () => {
     console.log(`Logged in as ${client.user.tag}!`);
@@ -198,17 +205,30 @@ client.on('message', async msg => {
             break;
         }
         case "join": {
-            msg.member.voice.channel.join()
-                .then(connection => {
-                    const streams = []
-                    msg.member.voice.channel.members.forEach((member) => {
-                        streams.push(connection.receiver.createStream(member.user, { end: 'manual' }))
-                    })
-                    const merged = stream(streams)
-                    connection.play(merged, {type: "opus"})
-                });
+            if (msg.member.voice.channel) {
+                msg.member.voice.channel.join()
+                    .then(connection => {
+                        connection.play('./audio/intro.mp3')
 
+                        mixer.on('data', (chunk) => {
+                            console.log(`Data: ${chunk.length}`)
+                        })
+                        msg.member.voice.channel.members.forEach((member) => {
+                            if (!member.user.bot) {
+                                console.log(member.user.username)
+                                const st = connection.receiver.createStream(member.user, { end: false, mode: 'pcm' })
+                                st.pipe(mixer.input({
+                                    channels: 1,
+                                    volume: 100,
+                                }))
+                            }
+                        })
+                        setTimeout(() => {
+                            connection.play(mixer, { type: 'converted' })
+                        }, 100)
+                    });
 
+            }
             break;
         }
         default: {
