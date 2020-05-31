@@ -15,11 +15,32 @@ class Stats {
 
     async loadChannels() {
         if (!this.StatsCatChannel) {
+            let everyoneId = this.guild.roles.everyone.id;
             this.StatsCatChannel = await this.guild.channels.create("Stats", {type: "category"})
-            await this.guild.channels.create(memberCountTitle, {type: "voice", parent: this.StatsCatChannel})
-            await this.guild.channels.create(channelCountTitle, {type: "voice", parent: this.StatsCatChannel})
-            await this.guild.channels.create(botCountTitle, {type: "voice", parent: this.StatsCatChannel})
-            await this.guild.channels.create(roleCountTitle, {type: "voice", parent: this.StatsCatChannel})
+            await this.guild.channels.create(memberCountTitle, {type: "voice", parent: this.StatsCatChannel, permissionOverwrites: [
+                {
+                  id: everyoneId,
+                  deny: ['CONNECT'],
+               },
+            ]})
+            await this.guild.channels.create(channelCountTitle, {type: "voice", parent: this.StatsCatChannel, permissionOverwrites: [
+                {
+                  id: everyoneId,
+                  deny: ['CONNECT'],
+               },
+            ]})
+            await this.guild.channels.create(botCountTitle, {type: "voice", parent: this.StatsCatChannel, permissionOverwrites: [
+                {
+                  id: everyoneId,
+                  deny: ['CONNECT'],
+               },
+            ]})
+            await this.guild.channels.create(roleCountTitle, {type: "voice", parent: this.StatsCatChannel, permissionOverwrites: [
+                {
+                  id: everyoneId,
+                  deny: ['CONNECT'],
+               },
+            ]})
         }
 
         this.memberCountChannel = this.guild.channels.cache.find((channel) => channel.parent && channel.parent.name === "Stats" && channel.name.includes("Member Count"))

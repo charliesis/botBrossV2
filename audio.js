@@ -52,7 +52,17 @@ async function createInitialSoundboardChannel(client,guild){
         generalCat = await guild.channels.create("General", {type: 'category'});
     }
     if(!soundboardChannel){
-        soundboardChannel = await guild.channels.create("Soundboard", {type: "text", parent: generalCat});
+        let everyoneId = guild.roles.everyone.id;
+        soundboardChannel = await guild.channels.create("Soundboard", {
+            type: "text", 
+            parent: generalCat,
+            permissionOverwrites: [
+                {
+                  id: everyoneId,
+                  deny: ['SEND_MESSAGES'],
+               },
+            ],
+        });
     }
     else{
         soundboardChannel.bulkDelete(100);
