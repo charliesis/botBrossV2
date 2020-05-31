@@ -39,7 +39,6 @@ async function playUserInput(msg, serverQueue, args, search) {
         result = await youtube.search(search, {limit: 1, type: 'video'})
     }
 
-    console.log(result)
     const video = result[0]
 
     const song = {

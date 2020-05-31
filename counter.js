@@ -66,7 +66,7 @@ module.exports = {
 function getAllCounters(args){
     let answer;
     for (const [key, value] of counterMap.entries()) {
-        if(key != "undefined")
+        if(key != undefined)
         answer += `${key} : ${value} \n`;
       }
     return answer;
