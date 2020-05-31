@@ -31,10 +31,12 @@ class Stats {
     }
 
     updateStats() {
-        this.memberCountChannel.setName(memberCountTitle + this.getMemberCount())
-        this.channelCountChannel.setName(channelCountTitle + this.getChannelCount())
-        this.botCountChannel.setName(botCountTitle + this.getBotCount())
-        this.roleCountChannel.setName(roleCountTitle + this.getRoleCount())
+        if (this.memberCountChannel && this.channelCountChannel && this.botCountChannel && this.roleCountChannel) {
+            this.memberCountChannel.setName(memberCountTitle + this.getMemberCount())
+            this.channelCountChannel.setName(channelCountTitle + this.getChannelCount())
+            this.botCountChannel.setName(botCountTitle + this.getBotCount())
+            this.roleCountChannel.setName(roleCountTitle + this.getRoleCount())
+        }
     }
 
     getMemberCount() {

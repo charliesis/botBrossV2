@@ -13,57 +13,51 @@ const statsMap = new Map()
 client.on('ready', () => {
     console.log(`Logged in as ${client.user.tag}!`);
 
-    
+
 
     client.user.setActivity('Bob Ross video', { type: "WATCHING" })
 
     client.guilds.cache.forEach(async (guild) => {
-        audio.createInitialSoundboardChannel(client,guild);
-        let expandingChannel = guild.channels.cache.find((channel) => channel instanceof Discord.CategoryChannel && channel.name.toLowerCase() === "self-expanding")
-        if (!expandingChannel) {
-            expandingChannel = await guild.channels.create("self-expanding", { type: "category" })
-            guild.channels.create('Create channel', { type: "voice", parent: expandingChannel })
-        }
-
-        let statsChannel = guild.channels.cache.find((channel) => channel instanceof Discord.CategoryChannel && channel.name.toLowerCase() === "stats")
-        statsMap.set(guild.id, new Stats(guild, statsChannel))
-        music.queue.set(guild.id, {
-            textChannel: null,
-            voiceChannel: null,
-            connection: null,
-            songs: [],
-            volume: 5,
-            playing: false
-        });
+        onJoinGuild(guild);
     })
 });
 
+client.on("guildCreate", (guild) => {
+    onJoinGuild(guild);
+})
+
 client.on("guildMemberAdd", member => {
-    statsMap.get(member.guild.id).updateStats()
+    if (statsMap.has(member.guild.id))
+        statsMap.get(member.guild.id).updateStats()
 })
 
 client.on("guildMemberRemove", member => {
-    statsMap.get(member.guild.id).updateStats()
+    if (statsMap.has(member.guild.id))
+        statsMap.get(member.guild.id).updateStats()
 })
 
 client.on("channelCreate", channel => {
     if (channel instanceof Discord.GuildChannel) {
-        statsMap.get(channel.guild.id).updateStats()
+        if (statsMap.has(channel.guild.id))
+            statsMap.get(channel.guild.id).updateStats()
     }
 })
 
 client.on("channelDelete", channel => {
     if (channel instanceof Discord.GuildChannel) {
-        statsMap.get(channel.guild.id).updateStats()
+        if (statsMap.has(channel.guild.id))
+            statsMap.get(channel.guild.id).updateStats()
     }
 })
 
 client.on("roleCreate", role => {
-    statsMap.get(role.guild.id).updateStats()
+    if (statsMap.has(role.guild.id))
+        statsMap.get(role.guild.id).updateStats()
 })
 
 client.on("roleDelete", role => {
-    statsMap.get(role.guild.id).updateStats()
+    if (statsMap.has(role.guild.id))
+        statsMap.get(role.guild.id).updateStats()
 })
 
 client.on("voiceStateUpdate", async (oldState, newState) => {
@@ -184,7 +178,7 @@ client.on('message', async msg => {
             })
             break;
         case "hello": {
-            audio.playSound(msg,"./audio/intro.mp3")
+            audio.playSound(msg, "./audio/intro.mp3")
             break;
         }
         case "roll": {
@@ -212,3 +206,22 @@ client.on('message', async msg => {
 
 
 client.login(auth.token);
+
+async function onJoinGuild(guild) {
+    audio.createInitialSoundboardChannel(client, guild);
+    let expandingChannel = guild.channels.cache.find((channel) => channel instanceof Discord.CategoryChannel && channel.name.toLowerCase() === "self-expanding");
+    if (!expandingChannel) {
+        expandingChannel = await guild.channels.create("self-expanding", { type: "category" });
+        guild.channels.create('Create channel', { type: "voice", parent: expandingChannel });
+    }
+    let statsChannel = guild.channels.cache.find((channel) => channel instanceof Discord.CategoryChannel && channel.name.toLowerCase() === "stats");
+    statsMap.set(guild.id, new Stats(guild, statsChannel));
+    music.queue.set(guild.id, {
+        textChannel: null,
+        voiceChannel: null,
+        connection: null,
+        songs: [],
+        volume: 5,
+        playing: false
+    });
+}

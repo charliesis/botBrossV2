@@ -48,10 +48,10 @@ async function createInitialSoundboardChannel(client,guild){
     let soundboardChannel = guild.channels.cache.find((channel) => channel instanceof Discord.TextChannel && channel.name.toLowerCase() === "soundboard")
 
     if(!generalCat){
-        soundboardChannel = await guild.channels.create("General", {type: "category ", parent: generalCat});
+        generalCat = await guild.channels.create("General", {type: 'category'});
     }
     if(!soundboardChannel){
-        soundboardChannel = await guild.channels.create("Soundboard", {type: "text ", parent: generalCat});
+        soundboardChannel = await guild.channels.create("Soundboard", {type: "text", parent: generalCat});
     }
     else{
         soundboardChannel.bulkDelete(100);
