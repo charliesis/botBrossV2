@@ -7,6 +7,7 @@ let soundbardMap = new Map();
 const JSON_FILE = './audio/soundboard.json';
 
 const addMessages = new Map()
+const removeMessages = []
 
 function playSound(msg, audioPath, member = msg.member){
     let voiceChannel = member.voice.channel;
@@ -28,9 +29,14 @@ function emojiReact(msgReaction, user){
     let emoji = msgReaction.emoji;
 
     if (addMessages.has(msg.id)) {
-        addNewSound(emoji, addMessages.get(msg.id) , msgReaction.message.guild)
+        addNewSound(emoji, addMessages.get(msg.id) , msgReaction.message.guild,msg)
         addMessages.delete(msg.id)
-    } else {
+        msg.delete();
+    }else if(removeMessages.includes(msg.id)){
+        deleteSound(msgReaction)  
+        removeMessages.slice(removeMessages.indexOf(msg.id));
+        msg.delete();
+    }else {
         let soundMsgId = soundboardMessage.get(msgReaction.message.guild.id)
 
         if(soundMsgId != msg.id) return
@@ -84,14 +90,19 @@ async function createInitialSoundboardChannel(client,guild){
         .catch(console.error);
     }
 }
-function addNewSound(emoji,soundPath,guild){
-    let soundboardChannel = guild.channels.cache.find((channel) => channel instanceof Discord.TextChannel && channel.name.toLowerCase() === "soundboard")
-    let msg = soundboardChannel.messages.cache.get(soundboardMessage.get(guild.id));
+function addNewSound(emoji,soundPath,guild, msg){
+    let soundboardMsg = getSoundboardMessage(guild);
 
     soundbardMap.set(emoji.name,soundPath);
+    msg.reply(`Successfully added ${emoji.name} - ${soundPath.slice(8).slice(0, -4)} to the soundboard`)
 
-    updateMessage(msg);
+    updateMessage(soundboardMsg);
     serialize();
+}
+
+function getSoundboardMessage(guild){
+    let soundboardChannel = guild.channels.cache.find((channel) => channel instanceof Discord.TextChannel && channel.name.toLowerCase() === "soundboard")
+    return soundboardChannel.messages.cache.get(soundboardMessage.get(guild.id));
 }
 
 function createSoundboardMessage(soundboardChannel,guild){
@@ -118,7 +129,7 @@ function updateMessage(msg){
 function buildMsgDesrciption(){
     let description = "**React with an emoji to play a sound**```";
     for (const [key, value] of soundbardMap) {
-        let soundtrackName = (value.slice(8)).slice(0, -4);;
+        let soundtrackName = (value.slice(8)).slice(0, -4);
         description+= `. ${key} : ${soundtrackName} \n`
     }
     description += '```';
@@ -152,8 +163,49 @@ function addSound(msg) {
     });
 }
 
+function removeSound(msg){
+    let description = "**React to this message with an emoji to remove it from the soundboard**```";
+    for (const [key, value] of soundbardMap) {
+        let soundtrackName = (value.slice(8)).slice(0, -4);
+        description+= `. ${key} : ${soundtrackName} \n`
+    }
+    description += '```';
+    msg.delete();
+    msg.reply(description).then(message => {
+        for (const [key, value] of soundbardMap) {
+            message.react(key);
+        }
+        removeMessages.push(message.id);
+    });
+}
+function deleteSound(msgReaction){
+    let msg = msgReaction.message; 
+    let emoji = msgReaction.emoji;
+
+    let sound = soundbardMap.get(emoji.name)
+    let msgTxt;
+    console.log(sound)
+    if(sound){
+        soundbardMap.delete(emoji.name)
+        fs.unlink(sound,(err) => {
+            if(err)console.log(err); 
+            else console.log(`Deleted ${sound}`);
+        });
+        msgTxt = `Succesfully removed sound ${emoji.name} - ${sound.slice(8).slice(0, -4)} from the soundboard`
+    }
+    else{
+        msgTxt = `No sound attached to ${emoji.name} in the soundboard`
+    } 
+
+    msg.reply(msgTxt)
+    let soundboardMsg = getSoundboardMessage(msg.guild);
+    updateMessage(soundboardMsg);
+    serialize();
+}
+
 
 module.exports.addSound = addSound
+module.exports.removeSound = removeSound
 module.exports.playSound = playSound 
 module.exports.emojiReact = emojiReact 
 module.exports.createInitialSoundboardChannel = createInitialSoundboardChannel 

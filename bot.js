@@ -213,6 +213,10 @@ client.on('message', async msg => {
 
             break;
         }
+        case "remove":{
+            audio.removeSound(msg);
+            break;
+        }
         case "join": {
             if (msg.member.voice.channel) {
                 msg.member.voice.channel.join()
