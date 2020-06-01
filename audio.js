@@ -1,4 +1,6 @@
 const Discord = require('discord.js');
+const fs = require('fs')
+
 const soundboardMessage = new Map()
 const soundbardMap = new Map([
     ['✅', './audio/If this is your first time with us....mp3'],
@@ -13,6 +15,8 @@ const soundbardMap = new Map([
     ['🐉', './audio/over9000.mp3'],
     ['👮', './audio/police.mp3'],
   ])
+
+  const JSON_FILE = './audio/soundboard.json';
 
 function playSound(msg, audioPath, member = msg.member){
     let voiceChannel = member.voice.channel;
@@ -45,6 +49,7 @@ function emojiReact(msgReaction, user){
 }
 
 async function createInitialSoundboardChannel(client,guild){
+    //await deserialize();
     let generalCat = guild.channels.cache.find((channel) => channel instanceof Discord.CategoryChannel && channel.name.toLowerCase() === "general")
     let soundboardChannel = guild.channels.cache.find((channel) => channel instanceof Discord.TextChannel && channel.name.toLowerCase() === "soundboard")
 
@@ -63,27 +68,50 @@ async function createInitialSoundboardChannel(client,guild){
                },
             ],
         });
+        createSoundboardMessage(soundboardChannel,guild)
     }
     else{
-        soundboardChannel.bulkDelete(100);
+        soundboardChannel.messages.fetch({ limit: 1 })
+        .then(messages => {
+            if(messages.size == 0){
+                createSoundboardMessage(soundboardChannel,guild);
+                return;
+            }
+
+            let msg = messages.first();
+            soundboardMessage.set(guild.id,msg.id)
+        })
+        .catch(console.error);
     }
-    let description = "**React with an emoji to play a sound**```";
-    for (const [key, value] of soundbardMap) {
-        let soundtrackName = (value.slice(8)).slice(0, -4);;
-        description+= `. ${key} : ${soundtrackName} \n`
-    }
-    description += '```';
-
-
-    soundboardChannel.send(description).then(sentMsg => {
-        soundboardMessage.set(guild.id,sentMsg.id)
-        for (const [key, value] of soundbardMap) {
-            sentMsg.react(key);
-        }
-    })
-
-    
 }
+function createSoundboardMessage(soundboardChannel,guild){
+    let description = "**React with an emoji to play a sound**```";
+        for (const [key, value] of soundbardMap) {
+            let soundtrackName = (value.slice(8)).slice(0, -4);;
+            description+= `. ${key} : ${soundtrackName} \n`
+        }
+        description += '```';
+    
+    
+        soundboardChannel.send(description).then(sentMsg => {
+            soundboardMessage.set(guild.id,sentMsg.id)
+            for (const [key, value] of soundbardMap) {
+                sentMsg.react(key);
+            }
+        })
+}
+
+function serialize(){
+    let jsonData = JSON.stringify([...soundbardMap]);
+    fs.writeFileSync(JSON_FILE, jsonData)
+}
+
+async function deserialize(){
+    let rawdata = fs.readFileSync(JSON_FILE);
+    let jsonMap = JSON.parse(rawdata);
+    soundbardMap = new Map(JSON.parse(jsonMap));
+}
+
 
 
 module.exports.playSound = playSound 
