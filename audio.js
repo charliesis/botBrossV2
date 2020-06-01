@@ -1,9 +1,12 @@
 const Discord = require('discord.js');
 const fs = require('fs')
+const https = require('https')
 
 const soundboardMessage = new Map()
 let soundbardMap = new Map();
 const JSON_FILE = './audio/soundboard.json';
+
+const addMessages = new Map()
 
 function playSound(msg, audioPath, member = msg.member){
     let voiceChannel = member.voice.channel;
@@ -24,15 +27,20 @@ function emojiReact(msgReaction, user){
     let msg = msgReaction.message; 
     let emoji = msgReaction.emoji;
 
-    let soundMsgId = soundboardMessage.get(msgReaction.message.guild.id)
+    if (addMessages.has(msg.id)) {
+        addNewSound(emoji, addMessages.get(msg.id) , msgReaction.message.guild)
+        addMessages.delete(msg.id)
+    } else {
+        let soundMsgId = soundboardMessage.get(msgReaction.message.guild.id)
 
-    if(soundMsgId != msg.id) return
+        if(soundMsgId != msg.id) return
 
-    const member = msgReaction.message.guild.member(user);
-    let audio = soundbardMap.get(emoji.name);
-    if(audio != undefined) playSound(msg, audio, member)
+        const member = msgReaction.message.guild.member(user);
+        let audio = soundbardMap.get(emoji.name);
+        if(audio != undefined) playSound(msg, audio, member)
 
-    msgReaction.users.remove(user)
+        msgReaction.users.remove(user)
+    }
 }
 
 async function createInitialSoundboardChannel(client,guild){
@@ -124,8 +132,23 @@ function deserialize(){
     soundbardMap = new Map(jsonMap);
 }
 
+function addSound(msg) {
+    const url = msg.attachments.array()[0].attachment;
+    const fileName = msg.attachments.array()[0].attachment.split('/').splice(-1).pop()
+    const outPath = `./audio/${fileName}`
+    const outFile = fs.createWriteStream(outPath);
+    https.get(url, (res) => {
+        res.pipe(outFile);
+        res.on('close', () => {
+            outFile.close();
+            msg.delete();
+            msg.reply(`React to this message with an emoji to set ${fileName} to the soundboard`).then(message => addMessages.set(message.id, outPath));
+        });
+    });
+}
 
 
+module.exports.addSound = addSound
 module.exports.playSound = playSound 
 module.exports.emojiReact = emojiReact 
 module.exports.createInitialSoundboardChannel = createInitialSoundboardChannel 

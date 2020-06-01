@@ -204,6 +204,15 @@ client.on('message', async msg => {
             msg.channel.send(str);
             break;
         }
+        case "add": {
+            if (msg.attachments.size !== 1) {
+                msg.reply("One audio file is required!");
+                return
+            }
+            audio.addSound(msg);
+
+            break;
+        }
         case "join": {
             if (msg.member.voice.channel) {
                 msg.member.voice.channel.join()
