@@ -2,21 +2,8 @@ const Discord = require('discord.js');
 const fs = require('fs')
 
 const soundboardMessage = new Map()
-const soundbardMap = new Map([
-    ['✅', './audio/If this is your first time with us....mp3'],
-    ['❤️', './audio/intro.mp3'],
-    ['🧱', './audio/build-a-wall.mp3'],
-    ['🧑', './audio/and-his-name-is-john-cena.mp3'],
-    ['🧻', './audio/epic.swf_1.mp3'],
-    ['🐑', './audio/mountonz.mp3'],
-    ['❌', './audio/oh no no no.mp3'],
-    ['⛏️', './audio/creeper.mp3'],
-    ['📯', './audio/airhorn.mp3'],
-    ['🐉', './audio/over9000.mp3'],
-    ['👮', './audio/police.mp3'],
-  ])
-
-  const JSON_FILE = './audio/soundboard.json';
+let soundbardMap = new Map();
+const JSON_FILE = './audio/soundboard.json';
 
 function playSound(msg, audioPath, member = msg.member){
     let voiceChannel = member.voice.channel;
@@ -36,7 +23,7 @@ function playSound(msg, audioPath, member = msg.member){
 function emojiReact(msgReaction, user){
     let msg = msgReaction.message; 
     let emoji = msgReaction.emoji;
-    
+
     let soundMsgId = soundboardMessage.get(msgReaction.message.guild.id)
 
     if(soundMsgId != msg.id) return
@@ -49,7 +36,7 @@ function emojiReact(msgReaction, user){
 }
 
 async function createInitialSoundboardChannel(client,guild){
-    //await deserialize();
+    await deserialize();
     let generalCat = guild.channels.cache.find((channel) => channel instanceof Discord.CategoryChannel && channel.name.toLowerCase() === "general")
     let soundboardChannel = guild.channels.cache.find((channel) => channel instanceof Discord.TextChannel && channel.name.toLowerCase() === "soundboard")
 
@@ -77,28 +64,53 @@ async function createInitialSoundboardChannel(client,guild){
                 createSoundboardMessage(soundboardChannel,guild);
                 return;
             }
-
             let msg = messages.first();
+            updateMessage(msg);
             soundboardMessage.set(guild.id,msg.id)
         })
         .catch(console.error);
     }
 }
+function addNewSound(emoji,soundPath,guild){
+    let soundboardChannel = guild.channels.cache.find((channel) => channel instanceof Discord.TextChannel && channel.name.toLowerCase() === "soundboard")
+    let msg = soundboardChannel.messages.cache.get(soundboardMessage.get(guild.id));
+
+    soundbardMap.set(emoji.name,soundPath);
+
+    updateMessage(msg);
+    serialize();
+}
+
 function createSoundboardMessage(soundboardChannel,guild){
-    let description = "**React with an emoji to play a sound**```";
+    let description = buildMsgDesrciption();
+    
+    soundboardChannel.send(description).then(sentMsg => {
+        soundboardMessage.set(guild.id,sentMsg.id)
         for (const [key, value] of soundbardMap) {
-            let soundtrackName = (value.slice(8)).slice(0, -4);;
-            description+= `. ${key} : ${soundtrackName} \n`
+            sentMsg.react(key);
         }
-        description += '```';
-    
-    
-        soundboardChannel.send(description).then(sentMsg => {
-            soundboardMessage.set(guild.id,sentMsg.id)
-            for (const [key, value] of soundbardMap) {
-                sentMsg.react(key);
-            }
-        })
+    })
+}
+
+function updateMessage(msg){
+    let description = buildMsgDesrciption();
+    msg.reactions.removeAll().catch(error => console.error('Failed to clear reactions: ', error));
+    msg.edit(description).then(()=>{
+        for (const [key, value] of soundbardMap) {
+            msg.react(key);
+        }
+    });
+}
+
+function buildMsgDesrciption(){
+    let description = "**React with an emoji to play a sound**```";
+    for (const [key, value] of soundbardMap) {
+        let soundtrackName = (value.slice(8)).slice(0, -4);;
+        description+= `. ${key} : ${soundtrackName} \n`
+    }
+    description += '```';
+
+    return description;
 }
 
 function serialize(){
@@ -106,10 +118,10 @@ function serialize(){
     fs.writeFileSync(JSON_FILE, jsonData)
 }
 
-async function deserialize(){
+function deserialize(){
     let rawdata = fs.readFileSync(JSON_FILE);
     let jsonMap = JSON.parse(rawdata);
-    soundbardMap = new Map(JSON.parse(jsonMap));
+    soundbardMap = new Map(jsonMap);
 }
 
 
