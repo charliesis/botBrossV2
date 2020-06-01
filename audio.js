@@ -66,11 +66,16 @@ async function createInitialSoundboardChannel(client,guild){
         createSoundboardMessage(soundboardChannel,guild)
     }
     else{
-        soundboardChannel.messages.fetch({ limit: 1 })
+        soundboardChannel.messages.fetch()
         .then(messages => {
-            if(messages.size == 0){
+            if(messages.size === 0){
                 createSoundboardMessage(soundboardChannel,guild);
                 return;
+            }
+            if(messages.size > 1) {
+                for (let i = 1; i < messages.size; ++i) {
+                    messages.array()[i].delete()
+                }
             }
             let msg = messages.first();
             updateMessage(msg);
